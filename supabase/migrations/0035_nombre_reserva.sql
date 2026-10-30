@@ -1,0 +1,52 @@
+-- El nombre que dio quien reservó, guardado en la CITA y no en la ficha.
+--
+-- EL BUG QUE ARREGLA: una madre reserva desde su móvil para su hija. El teléfono
+-- ya está en el CRM a nombre de la madre, así que la cita se enlaza a SU ficha
+-- —lo cual es correcto: es su teléfono y su historial— pero el salón acaba
+-- viendo en la agenda el nombre de la madre y recibiendo a la hija. Quien
+-- reservó escribió «Marisol Luna» y el salón lee «Carlos».
+--
+-- POR QUÉ NO SE ARREGLA RENOMBRANDO LA FICHA: porque entonces cualquiera que
+-- conozca un teléfono podría cambiarle el nombre a un cliente del salón desde
+-- una página pública. El nombre de la ficha lo gobierna el salón; el de la
+-- reserva lo dice quien reserva. Son dos datos distintos y ahora se guardan por
+-- separado.
+--
+-- POR QUÉ EN `appointments` Y NO EN `clients`: porque es un dato DE ESA CITA.
+-- La misma persona puede reservar hoy para su hija y la semana que viene para
+-- ella misma, y las dos citas son verdad. Colgarlo del cliente obligaría a
+-- elegir cuál de los dos nombres es «el» nombre, que es justo el error de
+-- partida.
+
+-- ---------------------------------------------------------------------------
+-- El nombre de la reserva
+-- ---------------------------------------------------------------------------
+-- NULL = no lo dijo nadie, que es el caso normal de una cita creada desde el
+-- panel: ahí la recepcionista elige una ficha de una lista, no teclea un nombre
+-- suelto, así que no hay un segundo nombre que guardar. Las citas anteriores a
+-- esta migración se quedan a NULL y la pantalla las pinta como siempre.
+--
+-- Lo escriben las dos puertas por las que entra alguien de fuera —el widget
+-- público y el bot de WhatsApp— y NO se usa nunca para identificar a nadie:
+-- para eso está `client_id`. Es texto para que lo lea una persona del salón.
+--
+-- Sin longitud máxima en la columna: el límite lo pone el esquema de entrada
+-- (80 caracteres en `ReservaIn`), que es donde se valida lo que llega de fuera.
+-- Un `varchar(n)` aquí solo añadiría una forma más de que una escritura reviente
+-- lejos de donde se puede explicar el error.
+alter table public.appointments
+  add column nombre_reserva text;
+
+-- Sin índice: no se busca por este campo ni se ordena por él. Se lee siempre
+-- junto a la cita que ya se está trayendo por fecha o por salón.
+
+-- ---------------------------------------------------------------------------
+-- Lo que NO cambia
+-- ---------------------------------------------------------------------------
+-- Ni una política de RLS: la columna nace dentro de `appointments`, hereda sus
+-- políticas y sus grants de tabla, y se lee y escribe con el mismo token del
+-- inquilino que el resto de la fila.
+--
+-- Y NO SE TOCA `clients.nombre`. Esa es la mitad del arreglo: el enlace por
+-- teléfono sigue dando continuidad de CRM, pero nadie de fuera puede renombrar
+-- a un cliente del salón.

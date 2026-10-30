@@ -1,0 +1,15 @@
+{
+  "sin_escritor": [
+    "salon_whatsapp_config.bot_politicas",
+    "salon_whatsapp_config.bot_tono"
+  ],
+  "solo_guion_o_relleno": [
+    "admin_users.email",
+    "admin_users.nombre",
+    "admin_users.password_hash",
+    "admin_users.rol",
+    "admin_users.totp_enabled",
+    "admin_users.totp_secret",
+    "employees.user_id"
+  ]
+}

@@ -1,0 +1,64 @@
+-- 0050 · El CIF vuelve a poder guardarse
+--
+-- Una línea, y lleva dos semanas costando.
+--
+-- ═══ QUÉ PASABA ═══
+--
+-- Guardar el perfil del salón con un CIF distinto contestaba, EN PANTALLA:
+--
+--   {"code":"42501", … "hint":"Grant the required privileges to the current
+--    role with: GRANT UPDATE ON public.accounts TO authenticated;",
+--    "message":"permission denied for table accounts"}
+--
+-- ═══ POR QUÉ ═══
+--
+-- La 0040 (6 sep) dejó el permiso de `accounts` POR COLUMNA, que está bien y no
+-- se toca:
+--
+--   grant update (cif, logo_url, accent_color) on public.accounts to authenticated;
+--
+-- La 0042 (7 sep) añadió `accounts.cif_pais` —el país decide con qué reglas se
+-- valida el número— y NO amplió ese grant. Ese mismo día, `salon.py` empezó a
+-- escribir los dos campos JUNTOS: validar un NIF español con las reglas de otro
+-- país no da un error visible, da un dato aceptado que no sirve para facturar,
+-- así que el país viaja siempre con el número. Desde entonces, cualquier
+-- guardado que incluyera el CIF moría en el permiso.
+--
+-- Es la lección de «una tabla nueva necesita su grant» una talla más pequeña:
+-- UNA COLUMNA NUEVA TAMBIÉN. Y que el grant fuera por columna es lo que lo hizo
+-- fallar en vez de pasar desapercibido, que es la parte buena.
+--
+-- ═══ POR QUÉ SOLO ESTA COLUMNA ═══
+--
+-- `accounts` guarda también `plan`, `pending_plan`, `stripe_customer_id` y la
+-- suspensión. Un `grant update` sobre la tabla entera dejaría que un salón se
+-- pusiera en Elite con una petición. Se añade `cif_pais` y nada más.
+--
+-- Lo que ya protege esa tabla, y que esta migración no cambia:
+--   · la política `accounts_update_admin`, acotada a `cuenta_actual()` y a rol
+--     admin, en `using` y en `with check`;
+--   · el trigger `accounts_plan_service_role_only`, que revienta si
+--     `authenticated` cambia el plan;
+--   · el trigger `accounts_suspension_service_role_only`, igual con la
+--     suspensión.
+-- Hay un test que lo DEMUESTRA contra la base de verdad, con su control:
+-- `backend/tests/test_un_salon_no_puede_cambiarse_el_plan.py`.
+--
+-- ═══ COLUMNAS NUEVAS ═══
+--
+-- Ninguna. Esta migración no crea ni altera columnas, así que la regla de la
+-- columna obligatoria (nace anulable o con default, y el backend que la exige
+-- va después) no tiene nada que aplicar aquí.
+--
+-- ═══ ORDEN DE DESPLIEGUE ═══
+--
+-- ESTA MIGRACIÓN VA SOLA Y PRIMERO, y es el caso cómodo: el backend que la
+-- necesita lleva desplegado desde el 7 de septiembre. No espera a nada y
+-- arregla en el instante en que se aplica. Tampoco hay vuelta atrás que
+-- preparar: quitar el permiso devolvería el 42501, nada más.
+
+begin;
+
+grant update (cif_pais) on public.accounts to authenticated;
+
+commit;

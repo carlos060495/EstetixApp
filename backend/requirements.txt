@@ -1,0 +1,32 @@
+fastapi==0.139.0
+starlette==1.3.1
+uvicorn[standard]==0.49.0
+pydantic==2.13.4
+pydantic-settings==2.14.2
+PyJWT==2.13.0
+cryptography==46.0.3
+httpx==0.28.1
+passlib[argon2]==1.7.4
+email-validator==2.3.0
+pyotp==2.9.0
+qrcode==8.2
+Pillow==12.3.0
+python-multipart==0.0.32
+fpdf2==2.8.7
+stripe==15.3.1
+# El horario del salón se guarda en hora LOCAL y las citas en UTC, así que hay
+# que convertir entre ambas respetando el cambio de hora (CET/CEST). Linux trae
+# la base de zonas del sistema, pero Windows no: sin esto, zoneinfo revienta con
+# ZoneInfoNotFoundError en las máquinas de desarrollo.
+tzdata==2025.2
+# El CRM guarda el teléfono como lo teclea una persona («600 11 22 33») y Meta
+# lo manda en E.164 sin el más («34600112233»). Reconciliarlos a mano solo
+# funciona en España: en Reino Unido el 0 de «020 7946 0958» es prefijo troncal
+# y no forma parte del número internacional. Esta librería sabe las reglas de
+# cada país, y el proyecto va a salir de España. Ver app/core/telefonos.py.
+phonenumbers==9.0.37
+pytest==8.3.4
+# Mueve el reloj de Python a otro instante para CORRER LA SUITE A OTRA HORA
+# (`tests/reloj_simulado.py`). No lo usa ningún test: lo usa el CI para comprobar
+# que ninguno depende de cuándo se ejecuta. Vive aquí porque aquí vive pytest.
+time-machine==3.5.1
