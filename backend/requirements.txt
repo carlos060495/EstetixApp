@@ -26,6 +26,9 @@ tzdata==2025.2
 # cada país, y el proyecto va a salir de España. Ver app/core/telefonos.py.
 phonenumbers==9.0.37
 pytest==8.3.4
+# `tests/stack_local.py` la importa para leer ESTETIX_STACK_CLAVE desde .env.
+# Declarada aquí para no depender de que pydantic-settings la arrastre.
+python-dotenv==1.2.2
 # Mueve el reloj de Python a otro instante para CORRER LA SUITE A OTRA HORA
 # (`tests/reloj_simulado.py`). No lo usa ningún test: lo usa el CI para comprobar
 # que ninguno depende de cuándo se ejecuta. Vive aquí porque aquí vive pytest.
