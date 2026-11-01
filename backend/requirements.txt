@@ -29,7 +29,6 @@ pytest==8.3.4
 # `tests/stack_local.py` la importa para leer ESTETIX_STACK_CLAVE desde .env.
 # Declarada aquí para no depender de que pydantic-settings la arrastre.
 python-dotenv==1.2.2
-# Mueve el reloj de Python a otro instante para CORRER LA SUITE A OTRA HORA
-# (`tests/reloj_simulado.py`). No lo usa ningún test: lo usa el CI para comprobar
-# que ninguno depende de cuándo se ejecuta. Vive aquí porque aquí vive pytest.
+# Permite simular el reloj de Python en otras fechas con `tests/reloj_simulado.py`.
+# Se importa directamente allí, por eso se declara como dependencia.
 time-machine==3.5.1
